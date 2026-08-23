@@ -163,12 +163,14 @@ message(STATUS "")
 #   - Set FETK_VERSION to the git branch or commit hash you want to use (e.g. main)
 ################################################################################
 
-# FETK is currently required, and therefore this option is disabled
-#option(ENABLE_FETK "Enable the finite element solver" ON)
-
-set(FETK_VERSION "57195e55351e04ce6ee0ef56a143c996a9aee7e2" CACHE STRING "Version of FETK to use")
-include(ImportFETK)
-import_fetk(${FETK_VERSION})
+option(ENABLE_FETK "Enable the finite element solver" ON)
+if(ENABLE_FETK)
+  set(FETK_VERSION "57195e55351e04ce6ee0ef56a143c996a9aee7e2" CACHE STRING "Version of FETK to use")
+  include(ImportFETK)
+  import_fetk(${FETK_VERSION})
+else()
+  message(STATUS "FETK disabled (ENABLE_FETK=OFF); skipping FETK/MALOC/UMFPACK")
+endif()
 
 
 ###############################################################################
@@ -362,15 +364,19 @@ endif()
 find_package( Threads REQUIRED )
 list(APPEND APBS_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
-find_package( UMFPACK REQUIRED )
-find_package( SuiteSparse REQUIRED )
-message(STATUS "UMFPack libraries: ${UMFPACK_LIBRARIES}")
-message(STATUS "SUITESPARSE_INCLUDE_DIRS: ${SUITESPARSE_INCLUDE_DIRS}")
-message(STATUS "SUITESPARSE_LIBRARIES: ${SUITESPARSE_LIBRARIES}")
-list(APPEND APBS_LIBS
-    ${UMFPACK_LIBRARIES}
-    ${SUITESPARSE_LIBRARIES}
-)
+if(ENABLE_FETK)
+  find_package( UMFPACK REQUIRED )
+  find_package( SuiteSparse REQUIRED )
+  message(STATUS "UMFPack libraries: ${UMFPACK_LIBRARIES}")
+  message(STATUS "SUITESPARSE_INCLUDE_DIRS: ${SUITESPARSE_INCLUDE_DIRS}")
+  message(STATUS "SUITESPARSE_LIBRARIES: ${SUITESPARSE_LIBRARIES}")
+  list(APPEND APBS_LIBS
+      ${UMFPACK_LIBRARIES}
+      ${SUITESPARSE_LIBRARIES}
+  )
+else()
+  message(STATUS "UMFPACK/SuiteSparse support skipped (ENABLE_FETK=OFF)")
+endif()
 
 ################################################################################
 # Optionally copy NanoShaper executable                                        #
